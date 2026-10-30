@@ -120,6 +120,7 @@ h2 { font-size:17px; margin:0; }
     <input type="hidden" id="editId">
     <div class="field"><label for="brand">Marca</label><input id="brand" required maxlength="70" placeholder="Es. Acuvue"></div>
     <div class="field"><label for="model">Modello</label><input id="model" required maxlength="90" placeholder="Es. Oasys 1-Day"></div>
+    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="number" step="0.25" inputmode="decimal" placeholder="Es. -2,50"></div>
     <div class="field"><label for="quantity">Quantità (confezioni)</label><input id="quantity" type="number" min="0" step="1" value="1" required inputmode="numeric"></div>
     <div class="field"><label for="expiry">Data di scadenza</label><input id="expiry" type="date" required></div>
     <div class="modal-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva prodotto</button></div>
@@ -154,7 +155,7 @@ h2 { font-size:17px; margin:0; }
   }
   function render() {
     const query = $('search').value.trim().toLocaleLowerCase('it');
-    const visible = products.filter(p => (p.brand + ' ' + p.model).toLocaleLowerCase('it').includes(query));
+    const visible = products.filter(p => (p.brand + ' ' + p.model + ' ' + (p.diopter ?? '')).toLocaleLowerCase('it').includes(query));
     const qty = products.reduce((sum,p) => sum + p.quantity, 0);
     const attention = products.filter(p => p.quantity <= threshold || daysUntil(p.expiry) <= 60).length;
     $('totalProducts').textContent = products.length;
@@ -175,7 +176,7 @@ h2 { font-size:17px; margin:0; }
     }
     $('productList').innerHTML = visible.map(p => {
       const s = status(p);
-      return `<article class="product" data-id="${p.id}"><div class="product-top"><div><div class="brand">${escapeHtml(p.brand)}</div><div class="model">${escapeHtml(p.model)}</div></div><span class="pill ${s.cls}">${s.label}</span></div><div class="details"><div><div class="detail-label">QUANTITÀ</div><div class="detail-value">${p.quantity} confezioni</div></div><div><div class="detail-label">SCADENZA</div><div class="detail-value">${fmtDate(p.expiry)}</div></div></div><div class="actions"><button class="btn btn-soft" data-action="minus" aria-label="Togli una confezione">− 1</button><button class="btn btn-soft" data-action="plus" aria-label="Aggiungi una confezione">＋ 1</button><span class="spacer"></span><button class="btn btn-soft" data-action="edit">Modifica</button><button class="btn btn-danger" data-action="delete">Elimina</button></div></article>`;
+      return `<article class="product" data-id="${p.id}"><div class="product-top"><div><div class="brand">${escapeHtml(p.brand)}</div><div class="model">${escapeHtml(p.model)}</div></div><span class="pill ${s.cls}">${s.label}</span></div><div class="details"><div><div class="detail-label">QUANTITÀ</div><div class="detail-value">${p.quantity} confezioni</div></div>${p.diopter ? `<div><div class="detail-label">DIOTTRIA</div><div class="detail-value">${escapeHtml(String(p.diopter).replace(".", ","))}</div></div>` : ""}<div><div class="detail-label">SCADENZA</div><div class="detail-value">${fmtDate(p.expiry)}</div></div></div><div class="actions"><button class="btn btn-soft" data-action="minus" aria-label="Togli una confezione">− 1</button><button class="btn btn-soft" data-action="plus" aria-label="Aggiungi una confezione">＋ 1</button><span class="spacer"></span><button class="btn btn-soft" data-action="edit">Modifica</button><button class="btn btn-danger" data-action="delete">Elimina</button></div></article>`;
     }).join('');
   }
   function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -184,6 +185,7 @@ h2 { font-size:17px; margin:0; }
     $('editId').value = product?.id || '';
     $('brand').value = product?.brand || '';
     $('model').value = product?.model || '';
+    $('diopter').value = product?.diopter ?? '';
     $('quantity').value = product ? product.quantity : 1;
     $('expiry').value = product?.expiry || '';
     $('modalTitle').textContent = product ? 'Modifica prodotto' : 'Aggiungi una lente';
@@ -197,7 +199,7 @@ h2 { font-size:17px; margin:0; }
   $('productForm').addEventListener('submit', e => {
     e.preventDefault();
     const id = $('editId').value;
-    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), quantity: Number($('quantity').value), expiry: $('expiry').value };
+    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), diopter: $('diopter').value === '' ? '' : Number($('diopter').value), quantity: Number($('quantity').value), expiry: $('expiry').value };
     if (!item.brand || !item.model || !item.expiry || !Number.isInteger(item.quantity) || item.quantity < 0) return;
     if (id) products = products.map(p => p.id === id ? item : p); else products.push(item);
     save(); closeModal(); render();
@@ -215,7 +217,7 @@ h2 { font-size:17px; margin:0; }
   $('search').addEventListener('input', render);
   $('threshold').addEventListener('change', e => { threshold = Number(e.target.value); localStorage.setItem(SETTINGS_KEY, String(threshold)); render(); });
   $('exportBtn').addEventListener('click', () => {
-    const data = { app:'Magazzino Lenti a Contatto', version:1, exportedAt:new Date().toISOString(), threshold, products };
+    const data = { app:'Magazzino Lenti a Contatto', version:2, exportedAt:new Date().toISOString(), threshold, products };
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-magazzino-lenti-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
   });
@@ -226,7 +228,7 @@ h2 { font-size:17px; margin:0; }
       const data = JSON.parse(await file.text());
       if (!data || !Array.isArray(data.products) || !data.products.every(p => p.brand && p.model && Number.isInteger(p.quantity) && p.quantity >= 0 && /^\d{4}-\d{2}-\d{2}$/.test(p.expiry))) throw new Error('Formato non valido');
       if (!confirm('Importare il backup? I prodotti attuali verranno sostituiti.')) return;
-      products = data.products.map(p => ({id:p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), brand:String(p.brand), model:String(p.model), quantity:p.quantity, expiry:p.expiry}));
+      products = data.products.map(p => ({id:p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), brand:String(p.brand), model:String(p.model), diopter:p.diopter === undefined || p.diopter === '' ? '' : Number(p.diopter), quantity:p.quantity, expiry:p.expiry}));
       threshold = [1,2,3,5,10].includes(Number(data.threshold)) ? Number(data.threshold) : 3;
       $('threshold').value = String(threshold); localStorage.setItem(SETTINGS_KEY,String(threshold)); save(); render(); alert('Backup importato.');
     } catch { alert('Impossibile importare il file: controlla che sia un backup valido.'); }
