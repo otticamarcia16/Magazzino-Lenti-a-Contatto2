@@ -120,7 +120,7 @@ h2 { font-size:17px; margin:0; }
     <input type="hidden" id="editId">
     <div class="field"><label for="brand">Marca</label><input id="brand" required maxlength="70" placeholder="Es. Acuvue"></div>
     <div class="field"><label for="model">Modello</label><input id="model" required maxlength="90" placeholder="Es. Oasys 1-Day"></div>
-    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="number" step="0.25" inputmode="decimal" placeholder="Es. -2,50"></div>
+    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="text" inputmode="text" autocomplete="off" placeholder="Es. -2,50 oppure +2,50"><small style="color:var(--muted)">Inserisci il segno + o − e usa la virgola o il punto.</small></div>
     <div class="field"><label for="quantity">Quantità (confezioni)</label><input id="quantity" type="number" min="0" step="1" value="1" required inputmode="numeric"></div>
     <div class="field"><label for="expiry">Data di scadenza</label><input id="expiry" type="date" required></div>
     <div class="modal-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva prodotto</button></div>
@@ -199,7 +199,10 @@ h2 { font-size:17px; margin:0; }
   $('productForm').addEventListener('submit', e => {
     e.preventDefault();
     const id = $('editId').value;
-    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), diopter: $('diopter').value === '' ? '' : Number($('diopter').value), quantity: Number($('quantity').value), expiry: $('expiry').value };
+    const diopterText = $('diopter').value.trim().replace(',', '.');
+    const validDiopter = diopterText === '' || /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(diopterText);
+    if (!validDiopter) { alert('Inserisci una diottria valida, ad esempio -2,50 oppure +2,50.'); return; }
+    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), diopter: diopterText === '' ? '' : Number(diopterText), quantity: Number($('quantity').value), expiry: $('expiry').value };
     if (!item.brand || !item.model || !item.expiry || !Number.isInteger(item.quantity) || item.quantity < 0) return;
     if (id) products = products.map(p => p.id === id ? item : p); else products.push(item);
     save(); closeModal(); render();
