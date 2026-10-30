@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#123b42">
+<title>Magazzino Lenti a Contatto</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --site-primary: #174B50;
+  --site-on-primary: #FFFFFF;
+  --site-secondary: #DCECE7;
+  --site-on-secondary: #173B3B;
+  --site-background: #F3F7F5;
+  --site-on-background: #172B2B;
+  --site-font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-font-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  --surface: light-dark(#FFFFFF, #1D2928);
+  --surface-soft: light-dark(#EAF1EE, #263735);
+  --text: light-dark(#172B2B, #EDF5F1);
+  --muted: light-dark(#657976, #B0C1BC);
+  --line: light-dark(#D7E2DD, #40534F);
+  --green: #24765F;
+  --amber: #A86612;
+  --red: #B64040;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
+button, input, select { font: inherit; }
+#app { min-height: 100vh; background-color: var(--site-background); color: var(--site-on-background); border-radius: 0; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.topbar { background: var(--site-primary); color: var(--site-on-primary); padding: calc(24px * var(--site-spacing-scale)) max(20px, calc((100vw - 760px)/2)); }
+.topline { display:flex; align-items:center; gap:12px; }
+.logo { width:44px; height:44px; display:grid; place-items:center; border-radius:15px; background:rgba(255,255,255,.14); font-size:23px; }
+h1 { font-family:var(--site-font-heading); font-size:calc(25px * var(--site-heading-scale)); margin:0; letter-spacing:-.7px; }
+.subtitle { margin:5px 0 0; opacity:.8; font-size:13px; }
+main { width:min(100% - 32px, 720px); margin:0 auto; padding:22px 0; }
+.summary { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px; }
+.stat { background:var(--surface); border:1px solid var(--line); border-radius:calc(17px * var(--site-radius-scale)); padding:14px 12px; min-width:0; }
+.stat .num { font-size:25px; font-weight:750; letter-spacing:-1px; }
+.stat .label { color:var(--muted); font-size:11px; margin-top:4px; }
+.toolbar { display:flex; gap:9px; margin:14px 0; }
+.btn { border:0; border-radius:13px; padding:12px 15px; font-weight:650; cursor:pointer; min-height:44px; }
+.btn-primary { background:var(--site-primary); color:var(--site-on-primary); }
+.btn-soft { background:var(--site-secondary); color:var(--site-on-secondary); }
+.btn-danger { background:light-dark(#FBE9E7,#482B2A); color:light-dark(#9D302C,#FFC2B9); }
+.btn:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid #6AAFA1; outline-offset:2px; }
+.search { width:100%; border:1px solid var(--line); background:var(--surface); color:var(--text); padding:13px 14px; border-radius:13px; }
+.alerts { display:grid; gap:8px; margin:14px 0; }
+.alert { border-radius:13px; padding:11px 13px; font-size:13px; background:light-dark(#FFF3DF,#403321); color:light-dark(#80500D,#F3CE8F); }
+.alert.red { background:light-dark(#FCE9E7,#432A2A); color:light-dark(#9F3430,#FFC1B9); }
+.section-head { display:flex; align-items:center; justify-content:space-between; margin:22px 0 10px; }
+h2 { font-size:17px; margin:0; }
+.count { font-size:12px; color:var(--muted); }
+.product-list { display:grid; gap:10px; }
+.product { background:var(--surface); border:1px solid var(--line); border-radius:17px; padding:15px; }
+.product-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.brand { font-weight:750; font-size:16px; }
+.model { color:var(--muted); margin-top:3px; font-size:14px; }
+.pill { flex:none; font-size:10px; font-weight:750; border-radius:99px; padding:6px 9px; background:light-dark(#E3F2EB,#244638); color:light-dark(#24664B,#A9E4C5); }
+.pill.warn { background:light-dark(#FFF0D8,#49391F); color:light-dark(#87520C,#F4CF8A); }
+.pill.bad { background:light-dark(#FCE7E5,#492B2A); color:light-dark(#A23833,#FFC1B8); }
+.details { display:flex; gap:24px; margin:14px 0 12px; }
+.detail-label { color:var(--muted); font-size:11px; }
+.detail-value { font-weight:700; margin-top:3px; font-size:14px; }
+.actions { display:flex; align-items:center; gap:7px; border-top:1px solid var(--line); padding-top:11px; }
+.actions .btn { min-height:35px; padding:7px 11px; font-size:12px; }
+.actions .spacer { flex:1; }
+.empty { text-align:center; background:var(--surface); border:1px dashed var(--line); border-radius:17px; padding:30px 18px; color:var(--muted); }
+.empty .emoji { font-size:32px; margin-bottom:8px; }
+.settings { margin-top:24px; background:var(--surface); border:1px solid var(--line); border-radius:17px; padding:15px; }
+.settings label { display:block; font-size:13px; font-weight:650; margin-bottom:7px; }
+.settings select { width:100%; background:var(--surface); color:var(--text); border:1px solid var(--line); padding:11px; border-radius:11px; }
+.backup { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.note { color:var(--muted); font-size:11px; line-height:1.5; margin-top:16px; }
+.modal-backdrop { position:fixed; inset:0; background:#0008; display:none; align-items:flex-end; justify-content:center; z-index:10; }
+.modal-backdrop.open { display:flex; }
+.modal { background:var(--surface); color:var(--text); width:min(100%,560px); border-radius:22px 22px 0 0; padding:22px 20px max(22px,env(safe-area-inset-bottom)); max-height:92vh; overflow:auto; }
+.modal h2 { margin-bottom:17px; font-size:20px; }
+.field { margin:12px 0; }
+.field label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; }
+.field input { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); }
+.modal-actions { display:flex; gap:9px; margin-top:18px; }
+.modal-actions button { flex:1; }
+@media (min-width:650px) { .topbar { padding-left:max(24px,calc((100vw - 720px)/2)); padding-right:max(24px,calc((100vw - 720px)/2)); } .modal-backdrop { align-items:center; padding:20px; } .modal { border-radius:22px; } }
+@media (prefers-color-scheme: dark) { .topbar { background:#123B42; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="topline"><div class="logo" aria-hidden="true">◉</div><div><h1>Magazzino Lenti</h1><p class="subtitle">Gestione semplice delle lenti a contatto</p></div></div>
+  </header>
+  <main>
+    <section class="summary" aria-label="Riepilogo magazzino">
+      <div class="stat"><div class="num" id="totalProducts">0</div><div class="label">PRODOTTI</div></div>
+      <div class="stat"><div class="num" id="totalQty">0</div><div class="label">CONFEZIONI</div></div>
+      <div class="stat"><div class="num" id="attentionCount">0</div><div class="label">DA CONTROLLARE</div></div>
+    </section>
+    <div class="toolbar"><button class="btn btn-primary" id="addBtn">＋ Aggiungi lente</button></div>
+    <input class="search" id="search" type="search" placeholder="Cerca per marca o modello…" aria-label="Cerca prodotti">
+    <section class="alerts" id="alerts" aria-live="polite"></section>
+    <div class="section-head"><h2>Le tue lenti</h2><span class="count" id="shownCount">0 prodotti</span></div>
+    <section class="product-list" id="productList"></section>
+    <section class="settings">
+      <label for="threshold">Avviso scorta bassa: segnala quando restano</label>
+      <select id="threshold"><option value="1">1 confezione o meno</option><option value="2">2 confezioni o meno</option><option value="3" selected>3 confezioni o meno</option><option value="5">5 confezioni o meno</option><option value="10">10 confezioni o meno</option></select>
+      <div class="backup"><button class="btn btn-soft" id="exportBtn">Esporta backup</button><button class="btn btn-soft" id="importBtn">Importa backup</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+      <p class="note">I prodotti vengono salvati nella memoria locale di questo browser su questo dispositivo. Esporta periodicamente un backup e conservalo in un posto sicuro. Cancellare i dati del browser può eliminare il magazzino.</p>
+    </section>
+  </main>
+</div>
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <form class="modal" id="productForm">
+    <h2 id="modalTitle">Aggiungi una lente</h2>
+    <input type="hidden" id="editId">
+    <div class="field"><label for="brand">Marca</label><input id="brand" required maxlength="70" placeholder="Es. Acuvue"></div>
+    <div class="field"><label for="model">Modello</label><input id="model" required maxlength="90" placeholder="Es. Oasys 1-Day"></div>
+    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="text" inputmode="text" autocomplete="off" placeholder="Es. -2,50 oppure +2,50"><small style="color:var(--muted)">Inserisci il segno + o − e usa la virgola o il punto.</small></div>
+    <div class="field"><label for="quantity">Quantità (confezioni)</label><input id="quantity" type="number" min="0" step="1" value="1" required inputmode="numeric"></div>
+    <div class="field"><label for="expiry">Data di scadenza</label><input id="expiry" type="date" required></div>
+    <div class="modal-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva prodotto</button></div>
+  </form>
+</div>
+<script>
+(() => {
+  const STORAGE_KEY = 'magazzino-lenti-contatto-v1';
+  const SETTINGS_KEY = 'magazzino-lenti-settings-v1';
+  let products = loadProducts();
+  let threshold = Number(localStorage.getItem(SETTINGS_KEY) || 3);
+  const $ = id => document.getElementById(id);
+  $('threshold').value = String([1,2,3,5,10].includes(threshold) ? threshold : 3);
+  threshold = Number($('threshold').value);
+  function loadProducts() {
+    try { const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(value) ? value : []; }
+    catch { return []; }
+  }
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(products)); }
+  function dateOnly(value) { return new Date(value + 'T00:00:00'); }
+  function daysUntil(value) {
+    const now = new Date(); now.setHours(0,0,0,0);
+    return Math.ceil((dateOnly(value) - now) / 86400000);
+  }
+  function fmtDate(value) { return dateOnly(value).toLocaleDateString('it-IT'); }
+  function status(p) {
+    const days = daysUntil(p.expiry);
+    if (days < 0) return {label:'Scaduta', cls:'bad'};
+    if (days <= 60) return {label:'In scadenza', cls:'warn'};
+    if (p.quantity <= threshold) return {label:'Scorta bassa', cls:'warn'};
+    return {label:'Disponibile', cls:''};
+  }
+  function render() {
+    const query = $('search').value.trim().toLocaleLowerCase('it');
+    const visible = products.filter(p => (p.brand + ' ' + p.model + ' ' + (p.diopter ?? '')).toLocaleLowerCase('it').includes(query));
+    const qty = products.reduce((sum,p) => sum + p.quantity, 0);
+    const attention = products.filter(p => p.quantity <= threshold || daysUntil(p.expiry) <= 60).length;
+    $('totalProducts').textContent = products.length;
+    $('totalQty').textContent = qty;
+    $('attentionCount').textContent = attention;
+    $('shownCount').textContent = `${visible.length} ${visible.length === 1 ? 'prodotto' : 'prodotti'}`;
+    const alerts = [];
+    const low = products.filter(p => p.quantity <= threshold);
+    const expired = products.filter(p => daysUntil(p.expiry) < 0);
+    const soon = products.filter(p => daysUntil(p.expiry) >= 0 && daysUntil(p.expiry) <= 60);
+    if (expired.length) alerts.push(`<div class="alert red">⚠ ${expired.length} ${expired.length === 1 ? 'prodotto scaduto' : 'prodotti scaduti'}: controlla le date.</div>`);
+    if (soon.length) alerts.push(`<div class="alert">◷ ${soon.length} ${soon.length === 1 ? 'prodotto in scadenza' : 'prodotti in scadenza'} entro 60 giorni.</div>`);
+    if (low.length) alerts.push(`<div class="alert">↓ ${low.length} ${low.length === 1 ? 'prodotto con scorta bassa' : 'prodotti con scorta bassa'} (≤ ${threshold} confezioni).</div>`);
+    $('alerts').innerHTML = alerts.join('');
+    if (!visible.length) {
+      $('productList').innerHTML = `<div class="empty"><div class="emoji">📦</div><strong>${products.length ? 'Nessun risultato' : 'Il magazzino è vuoto'}</strong><div style="font-size:13px;margin-top:6px">${products.length ? 'Prova a modificare la ricerca.' : 'Aggiungi la prima lente per iniziare.'}</div></div>`;
+      return;
+    }
+    $('productList').innerHTML = visible.map(p => {
+      const s = status(p);
+      return `<article class="product" data-id="${p.id}"><div class="product-top"><div><div class="brand">${escapeHtml(p.brand)}</div><div class="model">${escapeHtml(p.model)}</div></div><span class="pill ${s.cls}">${s.label}</span></div><div class="details"><div><div class="detail-label">QUANTITÀ</div><div class="detail-value">${p.quantity} confezioni</div></div>${p.diopter ? `<div><div class="detail-label">DIOTTRIA</div><div class="detail-value">${escapeHtml(String(p.diopter).replace(".", ","))}</div></div>` : ""}<div><div class="detail-label">SCADENZA</div><div class="detail-value">${fmtDate(p.expiry)}</div></div></div><div class="actions"><button class="btn btn-soft" data-action="minus" aria-label="Togli una confezione">− 1</button><button class="btn btn-soft" data-action="plus" aria-label="Aggiungi una confezione">＋ 1</button><span class="spacer"></span><button class="btn btn-soft" data-action="edit">Modifica</button><button class="btn btn-danger" data-action="delete">Elimina</button></div></article>`;
+    }).join('');
+  }
+  function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function openModal(product) {
+    $('productForm').reset();
+    $('editId').value = product?.id || '';
+    $('brand').value = product?.brand || '';
+    $('model').value = product?.model || '';
+    $('diopter').value = product?.diopter ?? '';
+    $('quantity').value = product ? product.quantity : 1;
+    $('expiry').value = product?.expiry || '';
+    $('modalTitle').textContent = product ? 'Modifica prodotto' : 'Aggiungi una lente';
+    $('modalBackdrop').classList.add('open');
+    $('brand').focus();
+  }
+  function closeModal() { $('modalBackdrop').classList.remove('open'); }
+  $('addBtn').addEventListener('click', () => openModal());
+  $('cancelBtn').addEventListener('click', closeModal);
+  $('modalBackdrop').addEventListener('click', e => { if (e.target === $('modalBackdrop')) closeModal(); });
+  $('productForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = $('editId').value;
+    const diopterText = $('diopter').value.trim().replace(',', '.');
+    const validDiopter = diopterText === '' || /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(diopterText);
+    if (!validDiopter) { alert('Inserisci una diottria valida, ad esempio -2,50 oppure +2,50.'); return; }
+    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), diopter: diopterText === '' ? '' : Number(diopterText), quantity: Number($('quantity').value), expiry: $('expiry').value };
+    if (!item.brand || !item.model || !item.expiry || !Number.isInteger(item.quantity) || item.quantity < 0) return;
+    if (id) products = products.map(p => p.id === id ? item : p); else products.push(item);
+    save(); closeModal(); render();
+  });
+  $('productList').addEventListener('click', e => {
+    const button = e.target.closest('button[data-action]'); if (!button) return;
+    const card = button.closest('[data-id]'); const p = products.find(x => x.id === card.dataset.id); if (!p) return;
+    const action = button.dataset.action;
+    if (action === 'plus') p.quantity += 1;
+    if (action === 'minus') p.quantity = Math.max(0, p.quantity - 1);
+    if (action === 'edit') { openModal(p); return; }
+    if (action === 'delete') { if (!confirm(`Eliminare ${p.brand} – ${p.model}?`)) return; products = products.filter(x => x.id !== p.id); }
+    save(); render();
+  });
+  $('search').addEventListener('input', render);
+  $('threshold').addEventListener('change', e => { threshold = Number(e.target.value); localStorage.setItem(SETTINGS_KEY, String(threshold)); render(); });
+  $('exportBtn').addEventListener('click', () => {
+    const data = { app:'Magazzino Lenti a Contatto', version:2, exportedAt:new Date().toISOString(), threshold, products };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup-magazzino-lenti-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+  });
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.products) || !data.products.every(p => p.brand && p.model && Number.isInteger(p.quantity) && p.quantity >= 0 && /^\d{4}-\d{2}-\d{2}$/.test(p.expiry))) throw new Error('Formato non valido');
+      if (!confirm('Importare il backup? I prodotti attuali verranno sostituiti.')) return;
+      products = data.products.map(p => ({id:p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), brand:String(p.brand), model:String(p.model), diopter:p.diopter === undefined || p.diopter === '' ? '' : Number(p.diopter), quantity:p.quantity, expiry:p.expiry}));
+      threshold = [1,2,3,5,10].includes(Number(data.threshold)) ? Number(data.threshold) : 3;
+      $('threshold').value = String(threshold); localStorage.setItem(SETTINGS_KEY,String(threshold)); save(); render(); alert('Backup importato.');
+    } catch { alert('Impossibile importare il file: controlla che sia un backup valido.'); }
+    finally { e.target.value = ''; }
+  });
+  render();
+})();
+</script>
+</body>
+</html>
