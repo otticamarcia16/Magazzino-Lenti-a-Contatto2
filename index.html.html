@@ -83,7 +83,7 @@ h2 { font-size:17px; margin:0; }
 .modal h2 { margin-bottom:17px; font-size:20px; }
 .field { margin:12px 0; }
 .field label { display:block; font-size:12px; font-weight:700; margin-bottom:6px; }
-.field input { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); }
+.field input, .field select { width:100%; padding:13px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--text); }
 .modal-actions { display:flex; gap:9px; margin-top:18px; }
 .modal-actions button { flex:1; }
 @media (min-width:650px) { .topbar { padding-left:max(24px,calc((100vw - 720px)/2)); padding-right:max(24px,calc((100vw - 720px)/2)); } .modal-backdrop { align-items:center; padding:20px; } .modal { border-radius:22px; } }
@@ -118,9 +118,23 @@ h2 { font-size:17px; margin:0; }
   <form class="modal" id="productForm">
     <h2 id="modalTitle">Aggiungi una lente</h2>
     <input type="hidden" id="editId">
-    <div class="field"><label for="brand">Marca</label><input id="brand" required maxlength="70" placeholder="Es. Acuvue"></div>
-    <div class="field"><label for="model">Modello</label><input id="model" required maxlength="90" placeholder="Es. Oasys 1-Day"></div>
-    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="number" step="0.25" inputmode="decimal" placeholder="Es. -2,50"></div>
+    <div class="field"><label for="lensType">Tipo di lente</label><select id="lensType" required>
+      <option value="Giornaliere">Giornaliere</option>
+      <option value="Mensili">Mensili</option>
+    </select></div>
+    <div class="field"><label for="model">Modello Bausch + Lomb</label><select id="model" required>
+      <optgroup label="Lenti giornaliere">
+        <option value="Biotrue ONEday">Biotrue ONEday</option>
+        <option value="ULTRA ONE DAY">ULTRA ONE DAY</option>
+        <option value="SofLens">SofLens</option>
+      </optgroup>
+      <optgroup label="Lenti mensili">
+        <option value="ULTRA">ULTRA</option>
+        <option value="SofLens 59">SofLens 59</option>
+      </optgroup>
+    </select></div>
+    <input type="hidden" id="brand" value="Bausch + Lomb">
+    <div class="field"><label for="diopter">Diottria</label><input id="diopter" type="text" inputmode="text" autocomplete="off" placeholder="Es. -2,50 oppure +2,50"><small style="color:var(--muted)">Inserisci il segno + o − e usa la virgola o il punto.</small></div>
     <div class="field"><label for="quantity">Quantità (confezioni)</label><input id="quantity" type="number" min="0" step="1" value="1" required inputmode="numeric"></div>
     <div class="field"><label for="expiry">Data di scadenza</label><input id="expiry" type="date" required></div>
     <div class="modal-actions"><button type="button" class="btn btn-soft" id="cancelBtn">Annulla</button><button type="submit" class="btn btn-primary">Salva prodotto</button></div>
@@ -155,7 +169,7 @@ h2 { font-size:17px; margin:0; }
   }
   function render() {
     const query = $('search').value.trim().toLocaleLowerCase('it');
-    const visible = products.filter(p => (p.brand + ' ' + p.model + ' ' + (p.diopter ?? '')).toLocaleLowerCase('it').includes(query));
+    const visible = products.filter(p => (p.brand + ' ' + p.model + ' ' + (p.lensType || '') + ' ' + (p.diopter ?? '')).toLocaleLowerCase('it').includes(query));
     const qty = products.reduce((sum,p) => sum + p.quantity, 0);
     const attention = products.filter(p => p.quantity <= threshold || daysUntil(p.expiry) <= 60).length;
     $('totalProducts').textContent = products.length;
@@ -176,30 +190,54 @@ h2 { font-size:17px; margin:0; }
     }
     $('productList').innerHTML = visible.map(p => {
       const s = status(p);
-      return `<article class="product" data-id="${p.id}"><div class="product-top"><div><div class="brand">${escapeHtml(p.brand)}</div><div class="model">${escapeHtml(p.model)}</div></div><span class="pill ${s.cls}">${s.label}</span></div><div class="details"><div><div class="detail-label">QUANTITÀ</div><div class="detail-value">${p.quantity} confezioni</div></div>${p.diopter ? `<div><div class="detail-label">DIOTTRIA</div><div class="detail-value">${escapeHtml(String(p.diopter).replace(".", ","))}</div></div>` : ""}<div><div class="detail-label">SCADENZA</div><div class="detail-value">${fmtDate(p.expiry)}</div></div></div><div class="actions"><button class="btn btn-soft" data-action="minus" aria-label="Togli una confezione">− 1</button><button class="btn btn-soft" data-action="plus" aria-label="Aggiungi una confezione">＋ 1</button><span class="spacer"></span><button class="btn btn-soft" data-action="edit">Modifica</button><button class="btn btn-danger" data-action="delete">Elimina</button></div></article>`;
+      return `<article class="product" data-id="${p.id}"><div class="product-top"><div><div class="brand">${escapeHtml(p.brand)}</div><div class="model">${escapeHtml(p.model)}${p.lensType ? " · " + escapeHtml(p.lensType) : ""}</div></div><span class="pill ${s.cls}">${s.label}</span></div><div class="details"><div><div class="detail-label">QUANTITÀ</div><div class="detail-value">${p.quantity} confezioni</div></div>${p.diopter ? `<div><div class="detail-label">DIOTTRIA</div><div class="detail-value">${escapeHtml(String(p.diopter).replace(".", ","))}</div></div>` : ""}<div><div class="detail-label">SCADENZA</div><div class="detail-value">${fmtDate(p.expiry)}</div></div></div><div class="actions"><button class="btn btn-soft" data-action="minus" aria-label="Togli una confezione">− 1</button><button class="btn btn-soft" data-action="plus" aria-label="Aggiungi una confezione">＋ 1</button><span class="spacer"></span><button class="btn btn-soft" data-action="edit">Modifica</button><button class="btn btn-danger" data-action="delete">Elimina</button></div></article>`;
     }).join('');
   }
   function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function openModal(product) {
     $('productForm').reset();
     $('editId').value = product?.id || '';
-    $('brand').value = product?.brand || '';
-    $('model').value = product?.model || '';
+    $('brand').value = 'Bausch + Lomb';
+    const modelSelect = $('model');
+    const knownModels = ['Biotrue ONEday', 'ULTRA ONE DAY', 'SofLens', 'ULTRA', 'SofLens 59'];
+    modelSelect.querySelectorAll('option[data-legacy="true"]').forEach(option => option.remove());
+    if (product?.model && !knownModels.includes(product.model)) {
+      const legacy = document.createElement('option');
+      legacy.value = product.model;
+      legacy.textContent = product.model + ' (già presente)';
+      legacy.dataset.legacy = 'true';
+      modelSelect.appendChild(legacy);
+    }
+    $('lensType').value = product?.lensType || (
+      ['Biotrue ONEday', 'ULTRA ONE DAY', 'SofLens'].includes(product?.model) ? 'Giornaliere' : 'Mensili'
+    );
+    modelSelect.value = product?.model || 'Biotrue ONEday';
     $('diopter').value = product?.diopter ?? '';
     $('quantity').value = product ? product.quantity : 1;
     $('expiry').value = product?.expiry || '';
     $('modalTitle').textContent = product ? 'Modifica prodotto' : 'Aggiungi una lente';
     $('modalBackdrop').classList.add('open');
-    $('brand').focus();
+    $('lensType').focus();
   }
   function closeModal() { $('modalBackdrop').classList.remove('open'); }
+  $('lensType').addEventListener('change', () => {
+    const choices = $('lensType').value === 'Giornaliere'
+      ? ['Biotrue ONEday', 'ULTRA ONE DAY', 'SofLens']
+      : ['ULTRA', 'SofLens 59'];
+    const current = $('model').value;
+    $('model').innerHTML = choices.map(name => `<option value="${name}">${name}</option>`).join('');
+    if (choices.includes(current)) $('model').value = current;
+  });
   $('addBtn').addEventListener('click', () => openModal());
   $('cancelBtn').addEventListener('click', closeModal);
   $('modalBackdrop').addEventListener('click', e => { if (e.target === $('modalBackdrop')) closeModal(); });
   $('productForm').addEventListener('submit', e => {
     e.preventDefault();
     const id = $('editId').value;
-    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: $('brand').value.trim(), model: $('model').value.trim(), diopter: $('diopter').value === '' ? '' : Number($('diopter').value), quantity: Number($('quantity').value), expiry: $('expiry').value };
+    const diopterText = $('diopter').value.trim().replace(',', '.');
+    const validDiopter = diopterText === '' || /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(diopterText);
+    if (!validDiopter) { alert('Inserisci una diottria valida, ad esempio -2,50 oppure +2,50.'); return; }
+    const item = { id: id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), brand: 'Bausch + Lomb', model: $('model').value, lensType: $('lensType').value, diopter: diopterText === '' ? '' : Number(diopterText), quantity: Number($('quantity').value), expiry: $('expiry').value };
     if (!item.brand || !item.model || !item.expiry || !Number.isInteger(item.quantity) || item.quantity < 0) return;
     if (id) products = products.map(p => p.id === id ? item : p); else products.push(item);
     save(); closeModal(); render();
@@ -228,7 +266,7 @@ h2 { font-size:17px; margin:0; }
       const data = JSON.parse(await file.text());
       if (!data || !Array.isArray(data.products) || !data.products.every(p => p.brand && p.model && Number.isInteger(p.quantity) && p.quantity >= 0 && /^\d{4}-\d{2}-\d{2}$/.test(p.expiry))) throw new Error('Formato non valido');
       if (!confirm('Importare il backup? I prodotti attuali verranno sostituiti.')) return;
-      products = data.products.map(p => ({id:p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), brand:String(p.brand), model:String(p.model), diopter:p.diopter === undefined || p.diopter === '' ? '' : Number(p.diopter), quantity:p.quantity, expiry:p.expiry}));
+      products = data.products.map(p => ({id:p.id || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random())), brand:String(p.brand || 'Bausch + Lomb'), model:String(p.model), lensType:p.lensType || (['Biotrue ONEday', 'ULTRA ONE DAY', 'SofLens'].includes(p.model) ? 'Giornaliere' : 'Mensili'), diopter:p.diopter === undefined || p.diopter === '' ? '' : Number(p.diopter), quantity:p.quantity, expiry:p.expiry}));
       threshold = [1,2,3,5,10].includes(Number(data.threshold)) ? Number(data.threshold) : 3;
       $('threshold').value = String(threshold); localStorage.setItem(SETTINGS_KEY,String(threshold)); save(); render(); alert('Backup importato.');
     } catch { alert('Impossibile importare il file: controlla che sia un backup valido.'); }
